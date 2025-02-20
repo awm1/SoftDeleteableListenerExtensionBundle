@@ -5,8 +5,16 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /** @var \Symfony\Component\DependencyInjection\ContainerBuilder $container */
-$container->setDefinition('evence.softdeletale.listener.softdelete', new Definition('Evence\Bundle\SoftDeleteableExtensionBundle\EventListener\SoftDeleteListener', array(new Reference('annotation_reader', ContainerInterface::NULL_ON_INVALID_REFERENCE))))
+$container->setDefinition(
+    'evence.softdeletale.listener.softdelete',
+    new Definition(
+        'Evence\Bundle\SoftDeleteableExtensionBundle\EventListener\SoftDeleteListener',
+        [
+            new Reference('annotation_reader', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+        ]
+    )
+)
 
-->addTag('doctrine.event_listener', array(
+->addTag('doctrine.event_listener', [
     'event' => 'preSoftDelete',
-));
+]);

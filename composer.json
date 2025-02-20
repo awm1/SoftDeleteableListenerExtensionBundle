@@ -11,7 +11,11 @@
         "symfony/framework-bundle": "^5.0 || ^6.0"
     },
     "require-dev": {
-        "symfony/console": "^5.0 || ^6.0"
+        "doctrine/orm": "^2.10 || ^3.3",
+        "doctrine/annotations": "^2.0",
+        "gedmo/doctrine-extensions": "^3.18",
+        "symfony/console": "^5.0 || ^6.0",
+        "symfony/property-access": "^5.0 || ^6.0"
     },
     "target-dir": "Evence/Bundle/SoftDeleteableExtensionBundle",
     "minimum-stability": "dev",
