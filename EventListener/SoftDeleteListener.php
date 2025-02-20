@@ -4,6 +4,7 @@ namespace Evence\Bundle\SoftDeleteableExtensionBundle\EventListener;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\OneToMany;
@@ -53,12 +54,12 @@ class SoftDeleteListener
     }
 
     /**
-     * @param PreSoftDeleteEventArgs $args
+     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
      *
      * @throws OnSoftDeleteUnknownTypeException
      * @throws \Exception
      */
-    public function preSoftDelete(PreSoftDeleteEventArgs $args)
+    public function preSoftDelete($args)
     {
         $em = $args->getObjectManager();
         $entity = $args->getObject();
@@ -89,11 +90,15 @@ class SoftDeleteListener
                         $associationMapping = (object)$meta->getAssociationMapping($property->getName());
                     }
 
-                    if (
-                        ($manyToMany = $associationMapping && $associationMapping->type == ClassMetadata::MANY_TO_MANY ? $associationMapping : null) ||
-                        ($manyToOne = $associationMapping && $associationMapping->type == ClassMetadata::MANY_TO_ONE ? $associationMapping : null) ||
-                        ($oneToOne = $associationMapping && $associationMapping->type == ClassMetadata::ONE_TO_ONE ? $associationMapping : null)
-                    ) {
+                    if ((self::associationMappingTypeDefinedIn($associationMapping) && (
+                        ($manyToMany = $associationMapping->type() == ClassMetadata::MANY_TO_MANY ? $associationMapping : null) ||
+                        ($manyToOne = $associationMapping->type() == ClassMetadata::MANY_TO_ONE ? $associationMapping : null) ||
+                        ($oneToOne = $associationMapping->type() == ClassMetadata::ONE_TO_ONE ? $associationMapping : null)
+                    )) || (self::legacyAssociationMappingTypeDefinedIn($associationMapping) && (
+                        ($manyToMany = $associationMapping->type == ClassMetadata::MANY_TO_MANY ? $associationMapping : null) ||
+                        ($manyToOne = $associationMapping->type == ClassMetadata::MANY_TO_ONE ? $associationMapping : null) ||
+                        ($oneToOne = $associationMapping->type == ClassMetadata::ONE_TO_ONE ? $associationMapping : null)
+                    ))) {
                         /** @var OneToOne|OneToMany|ManyToMany $relationship */
                         $relationship = $manyToOne ?: $manyToMany ?: $oneToOne;
 
@@ -183,7 +188,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param PreSoftDeleteEventArgs $args
+     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
      * @param $config
      * @throws OnSoftDeleteUnknownTypeException
      */
@@ -193,7 +198,7 @@ class SoftDeleteListener
         \ReflectionProperty $property,
         ClassMetadata $meta,
         $softDelete,
-        PreSoftDeleteEventArgs $args,
+        $args,
         $config
     ) {
         if (strtoupper($onDelete->type) === 'SET NULL') {
@@ -213,7 +218,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param PreSoftDeleteEventArgs $args
+     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
      * @param $config
      */
     protected function processOnDeleteSetNullOperation(
@@ -222,7 +227,7 @@ class SoftDeleteListener
         \ReflectionProperty $property,
         ClassMetadata $meta,
         $softDelete,
-        PreSoftDeleteEventArgs $args,
+        $args,
         $config
     ) {
         $reflProp = $meta->getReflectionProperty($property->name);
@@ -243,7 +248,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param PreSoftDeleteEventArgs $args
+     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
      * @param $config
      * @throws \Exception
      */
@@ -253,7 +258,7 @@ class SoftDeleteListener
         \ReflectionProperty $property,
         ClassMetadata $meta,
         $softDelete,
-        PreSoftDeleteEventArgs $args,
+        $args,
         $config
     ) {
         $reflProp = $meta->getReflectionProperty($property->name);
@@ -296,7 +301,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param PreSoftDeleteEventArgs $args
+     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
      * @param $config
      */
     protected function processOnDeleteCascadeOperation(
@@ -305,7 +310,7 @@ class SoftDeleteListener
         \ReflectionProperty $property,
         ClassMetadata $meta,
         $softDelete,
-        PreSoftDeleteEventArgs $args,
+        $args,
         $config
     ) {
         if ($softDelete) {
@@ -362,5 +367,15 @@ class SoftDeleteListener
         }
 
         return true;
+    }
+
+    private static function associationMappingTypeDefinedIn($associationMapping): bool
+    {
+        return $associationMapping && method_exists($associationMapping, 'type');
+    }
+
+    private static function legacyAssociationMappingTypeDefinedIn($associationMapping): bool
+    {
+        return $associationMapping && property_exists($associationMapping, 'type');
     }
 }

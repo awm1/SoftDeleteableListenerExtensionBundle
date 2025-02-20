@@ -2104,12 +2104,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "795fb419bf3337f70537c4965ed3c772553de4d0"
+                "reference": "e067a82b658292f7ebd75fd1d96185c418e88222"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/795fb419bf3337f70537c4965ed3c772553de4d0",
-                "reference": "795fb419bf3337f70537c4965ed3c772553de4d0",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/e067a82b658292f7ebd75fd1d96185c418e88222",
+                "reference": "e067a82b658292f7ebd75fd1d96185c418e88222",
                 "shasum": ""
             },
             "require": {
@@ -2202,7 +2202,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-19T07:52:27+00:00"
+            "time": "2025-02-20T14:30:20+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3202,12 +3202,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php84.git",
-                "reference": "332c223141e1c1e9e709f628ad5046e59e07e1b9"
+                "reference": "000df7860439609837bbe28670b0be15783b7fbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php84/zipball/332c223141e1c1e9e709f628ad5046e59e07e1b9",
-                "reference": "332c223141e1c1e9e709f628ad5046e59e07e1b9",
+                "url": "https://api.github.com/repos/symfony/polyfill-php84/zipball/000df7860439609837bbe28670b0be15783b7fbf",
+                "reference": "000df7860439609837bbe28670b0be15783b7fbf",
                 "shasum": ""
             },
             "require": {
@@ -3271,7 +3271,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-17T11:02:56+00:00"
+            "time": "2025-02-20T12:04:08+00:00"
         },
         {
             "name": "symfony/property-access",
