@@ -35,6 +35,8 @@ class SoftDeleteListener
      */
     protected $reader;
 
+    protected $softDeleteAttributeCache;
+
     public function __construct(?Reader $reader)
     {
         $this->reader = $reader;
@@ -42,15 +44,23 @@ class SoftDeleteListener
 
     private function getSoftDeleteAttribute(\ReflectionProperty $property, string $className): ?onSoftDelete
     {
+        $identifier = $property->getDeclaringClass()->getName().'::'.$property->getName();
+        if (isset($this->softDeleteAttributeCache[$identifier])) {
+            return $this->softDeleteAttributeCache[$identifier];
+        }
+
         $attributes = $property->getAttributes($className);
         if (!empty($attributes)) {
             $attribute = $attributes[0];
             $arguments = $attribute->getArguments();
 
-            return new onSoftDelete($arguments);
+            $this->softDeleteAttributeCache[$identifier] = new onSoftDelete($arguments);
+        } else {
+            $this->softDeleteAttributeCache[$identifier] =
+                (new AnnotationReader())->getPropertyAnnotation($property, onSoftDelete::class);
         }
 
-        return (new AnnotationReader())->getPropertyAnnotation($property, onSoftDelete::class);
+        return $this->softDeleteAttributeCache[$identifier];
     }
 
     /**
