@@ -1,15 +1,11 @@
 <?php
 
-namespace Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Annotation;
+namespace Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Attribute;
 
 use Attribute;
-use Doctrine\Common\Annotations\Annotation;
 
 /**
- * onSoftDelete annotation for onSoftDelete behavioral extension.
- *
- * @Annotation
- * @Target("PROPERTY")
+ * onSoftDelete attribute for onSoftDelete behavioral extension.
  *
  * @author Ruben Harms <info@rubenharms.nl>
  * @license MIT License (http://www.opensource.org/licenses/mit-license.php)

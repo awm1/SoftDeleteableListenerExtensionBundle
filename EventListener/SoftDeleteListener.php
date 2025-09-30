@@ -2,9 +2,6 @@
 
 namespace Evence\Bundle\SoftDeleteableExtensionBundle\EventListener;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\Reader;
-use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\OneToMany;
@@ -12,8 +9,8 @@ use Doctrine\ORM\Mapping\OneToOne;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\Proxy;
 use Evence\Bundle\SoftDeleteableExtensionBundle\Exception\OnSoftDeleteUnknownTypeException;
-use Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Annotation\onSoftDelete;
-use Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Annotation\onSoftDeleteSuccessor;
+use Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Attribute\onSoftDelete;
+use Evence\Bundle\SoftDeleteableExtensionBundle\Mapping\Attribute\onSoftDeleteSuccessor;
 use Gedmo\SoftDeleteable\Event\PostSoftDeleteEventArgs;
 use Gedmo\SoftDeleteable\Event\PreSoftDeleteEventArgs;
 use Gedmo\SoftDeleteable\SoftDeleteableListener as GedmoSoftDeleteableListener;
@@ -30,16 +27,10 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
  */
 class SoftDeleteListener
 {
-    /**
-     * @var Reader
-     */
-    protected $reader;
-
     protected $softDeleteAttributeCache;
 
-    public function __construct(?Reader $reader)
+    public function __construct()
     {
-        $this->reader = $reader;
     }
 
     private function getSoftDeleteAttribute(\ReflectionProperty $property, string $className): ?onSoftDelete
@@ -55,16 +46,13 @@ class SoftDeleteListener
             $arguments = $attribute->getArguments();
 
             $this->softDeleteAttributeCache[$identifier] = new onSoftDelete($arguments);
-        } else {
-            $this->softDeleteAttributeCache[$identifier] =
-                (new AnnotationReader())->getPropertyAnnotation($property, onSoftDelete::class);
         }
 
-        return $this->softDeleteAttributeCache[$identifier];
+        return $this->softDeleteAttributeCache[$identifier] ?? null;
     }
 
     /**
-     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
+     * @param PreSoftDeleteEventArgs $args
      *
      * @throws OnSoftDeleteUnknownTypeException
      * @throws \Exception
@@ -170,20 +158,12 @@ class SoftDeleteListener
 
                     if ($objects) {
                         $reflectionClass = new \ReflectionClass($namespace);
-                        if($this->reader){
-                            $classAnnotation = $this->reader->getClassAnnotation($reflectionClass, \Gedmo\Mapping\Annotation\SoftDeleteable::class);
-                            $softDelete = $classAnnotation instanceof \Gedmo\Mapping\Annotation\SoftDeleteable;
+                        $attributes = $reflectionClass->getAttributes(\Gedmo\Mapping\Annotation\SoftDeleteable::class);
+                        foreach ($attributes as $attribute) {
+                            $arguments = $attribute->getArguments();
                             foreach ($objects as $object) {
-                                $this->processOnDeleteOperation($object, $onDelete, $property, $meta, $softDelete, $args, ['fieldName' => $classAnnotation->fieldName]);
-                            }
-                        }else{
-                            $attributes = $reflectionClass->getAttributes(\Gedmo\Mapping\Annotation\SoftDeleteable::class);
-                            foreach ($attributes as $attribute) {
-                                $arguments = $attribute->getArguments();
-                                foreach ($objects as $object) {
-                                    $softDelete = \Gedmo\Mapping\Annotation\SoftDeleteable::class == $attribute->getName();
-                                    $this->processOnDeleteOperation($object, $onDelete, $property, $meta, $softDelete, $args, ['fieldName' => $arguments['fieldName']]);
-                                }
+                                $softDelete = \Gedmo\Mapping\Annotation\SoftDeleteable::class == $attribute->getName();
+                                $this->processOnDeleteOperation($object, $onDelete, $property, $meta, $softDelete, $args, ['fieldName' => $arguments['fieldName']]);
                             }
                         }
                     }
@@ -198,7 +178,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
+     * @param PreSoftDeleteEventArgs $args
      * @param $config
      * @throws OnSoftDeleteUnknownTypeException
      */
@@ -228,7 +208,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
+     * @param PreSoftDeleteEventArgs $args
      * @param $config
      */
     protected function processOnDeleteSetNullOperation(
@@ -258,7 +238,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
+     * @param PreSoftDeleteEventArgs $args
      * @param $config
      * @throws \Exception
      */
@@ -274,11 +254,11 @@ class SoftDeleteListener
         $reflProp = $meta->getReflectionProperty($property->name);
         $oldValue = $reflProp->getValue($object);
 
-        $reader = new AnnotationReader();
         $reflectionClass = new \ReflectionClass(ClassUtils::getClass($oldValue));
         $successors = [];
         foreach ($reflectionClass->getProperties() as $propertyOfOldValueObject) {
-            if ($reader->getPropertyAnnotation($propertyOfOldValueObject, onSoftDeleteSuccessor::class)) {
+            /** @var onSoftDelete $onSoftDelete */
+            if ($onSoftDelete = $this->getSoftDeleteAttribute($property, onSoftDeleteSuccessor::class)) {
                 $successors[] = $propertyOfOldValueObject;
             }
         }
@@ -311,7 +291,7 @@ class SoftDeleteListener
      * @param \ReflectionProperty $property
      * @param ClassMetadata $meta
      * @param $softDelete
-     * @param LifecycleEventArgs|PreSoftDeleteEventArgs $args
+     * @param PreSoftDeleteEventArgs $args
      * @param $config
      */
     protected function processOnDeleteCascadeOperation(

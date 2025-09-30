@@ -8,14 +8,13 @@
     "keywords": ["soft-deleteable"],
     "require": {
         "php": ">=8.0",
-        "symfony/framework-bundle": "^5.0 || ^6.0"
+        "symfony/framework-bundle": "^6.0 || ^7.0"
     },
     "require-dev": {
-        "doctrine/orm": "^2.10 || ^3.3",
-        "doctrine/annotations": "^2.0",
+        "doctrine/orm": "^3.3",
         "gedmo/doctrine-extensions": "^3.18",
-        "symfony/console": "^5.0 || ^6.0",
-        "symfony/property-access": "^5.0 || ^6.0"
+        "symfony/console": "^6.0 || ^7.0",
+        "symfony/property-access": "^6.0 || ^7.0"
     },
     "target-dir": "Evence/Bundle/SoftDeleteableExtensionBundle",
     "minimum-stability": "dev",
